@@ -110,8 +110,10 @@ public class WindowCreatedMsg extends BaseMsg {
 		Task.HParent = rwo.ReadInt(buffer);
 		Task.PID = rwo.ReadInt(buffer);
 		
+		byte[] appId = rwo.ReadBinary(buffer);
 		byte[] title = rwo.ReadBinary(buffer);
 		try {
+			Task.AppID = new String(appId, 0, appId.length, "UTF-8");
 			Task.Title = new String(title, 0, title.length, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block

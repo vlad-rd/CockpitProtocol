@@ -100,7 +100,7 @@ public class ShowTaskListMsg extends BaseMsg {
 		Vector<byte[]> apps = new Vector<byte[]>();
         Vector<byte[]> titles = new Vector<byte[]>();
         
-        int size = 2 + 4 + mid.length;
+        int size = 4 + mid.length + 4 + 2;
         
         for(int i = 0; i < Tasks.length; i++)
         {
@@ -121,6 +121,7 @@ public class ShowTaskListMsg extends BaseMsg {
         Data = new byte[size];
         ReadWriteOperators rwo = new ReadWriteOperators();
         rwo.WriteBinary(mid, Data);
+        rwo.WriteInt(ActiveHWND, Data);
         rwo.WriteShort(((Integer)Tasks.length).shortValue(), Data);
        
         for(int i = 0; i < Tasks.length; i++)
@@ -146,7 +147,7 @@ public class ShowTaskListMsg extends BaseMsg {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+		ActiveHWND = rwo.ReadInt(buffer);
 		Short nSize = rwo.ReadShort(buffer);
 		Tasks = new Window[nSize];
 		for(int i = 0; i < nSize; i++)
