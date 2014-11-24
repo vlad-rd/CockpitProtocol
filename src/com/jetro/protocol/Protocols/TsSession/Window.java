@@ -18,6 +18,26 @@ public class Window {
     public String AppID = "";
     
     @Override
+	public int hashCode() {
+		return this.HWND;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+    	if (other == this) {
+            return true;
+        }
+        if (other == null) {
+            return false;
+        }
+        if (!(other instanceof Window)) {
+        	return false;
+        }
+        Window task = (Window) other;
+        return this.HWND == task.HWND;
+	}
+
+	@Override
     public String toString()
     {
     	JSONObject objJson = new JSONObject();
