@@ -11,8 +11,10 @@ import com.jetro.protocol.Core.*;
 
 public class LoginMsg extends BaseMsg {
 	
-	public static final int LOGIN_SUCCESS = 1;
 	public static final int LOGIN_FAILURE = -1;
+	public static final int LOGIN_SUCCESS = 1;
+	public static final int LOGIN_RESET_PASSWORD = 2;
+	public static final int LOGIN_OPTIONAL_CHANGE_PASSWORD = 3;
 
 	public String name = "";
 	public String password = "";
@@ -20,7 +22,7 @@ public class LoginMsg extends BaseMsg {
 	public String deviceModel = "";
 	public String deviceId = "";
 	public String Ticket = "";
-	public int returnCode = -1;
+	public int returnCode = LOGIN_FAILURE;
 	public int daysBeforePasswordExpiration = -1;
 	
 	@Override
@@ -54,9 +56,8 @@ public class LoginMsg extends BaseMsg {
 
 	@Override
 	public void deserializeJson(String s) {
+		initialize();
 		try {
-			msgCategory = MESSAGE_CATEGORY.MOBILE_CONTROLLER.ValueOf();
-			msgCalssID = ClassID.LoginMsg.ValueOf();
 			JSONParser parser = new JSONParser();
 			Object obj = parser.parse(s);
 			JSONObject jsonObject = (JSONObject) obj;

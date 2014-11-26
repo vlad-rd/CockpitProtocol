@@ -10,6 +10,14 @@ import com.jetro.protocol.Core.MESSAGE_CATEGORY;
 
 public class ErrorMsg extends BaseMsg {
 	
+	public static final int ERROR_INVALID_USER_CREDENTIALS = 112;
+	public static final int ERROR_PASSWORD_CHANGE_FAILURE = 155;
+	public static final int ERROR_NONE_AVAILABLE_TS = 105;
+	public static final int ERROR_START_APPLICATION_FAILURE = 121;
+	public static final int ERROR_INVALID_TICKET = 104;
+	public static final int ERROR_TIMEOUT = 5;
+	public static final int ERROR_UNEXPECTED = 999;
+	
 	public int Err = 0;
     
     public String Description = "";
@@ -51,9 +59,8 @@ public class ErrorMsg extends BaseMsg {
 
 	@Override
 	public void deserializeJson(String s) {
+		initialize();
 		try {
-			msgCategory = MESSAGE_CATEGORY.GENERIC.ValueOf();
-			msgCalssID = ClassID.Error.ValueOf();
 			JSONParser parser = new JSONParser();
 			Object obj = parser.parse(s);
 			JSONObject jsonObject = (JSONObject) obj;
