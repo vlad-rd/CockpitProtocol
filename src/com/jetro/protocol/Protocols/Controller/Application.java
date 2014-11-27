@@ -3,7 +3,6 @@ package com.jetro.protocol.Protocols.Controller;
 //import java.util.Base64;
 //import java.util.Base64.Encoder;
 
-import org.json.JSONArray;
 import org.json.simple.JSONObject;
 
 
@@ -31,10 +30,9 @@ public class Application {
 			objJson.put("Name", Name);
 			objJson.put("CommandLine", CommandLine);
 			objJson.put("Arguments", Arguments);
-			JSONArray list = new JSONArray(Icon);
-			objJson.put("Icon", list);
+//			JSONArray list = new JSONArray(Icon);
+//			objJson.put("Icon", list);
 			objJson.put("IsActive", false);
-			//objJson.put("Icon",Base64.getEncoder().encodeToString(Icon));
 			return objJson.toJSONString();
 		}
 		catch(Exception e)

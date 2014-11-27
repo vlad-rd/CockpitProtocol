@@ -32,8 +32,6 @@ public class ApplicationIconMsg extends BaseMsg {
 		{
 			objJson.put("MsgId", MsgId);
 			objJson.put("ID", ID);
-			org.json.JSONArray list = new org.json.JSONArray(Icon);
-			objJson.put("Icon", list);			//objJson.put("Icon",Base64.getEncoder().encodeToString(Icon));
 			return objJson.toJSONString();
 		}
 		catch(Exception e)

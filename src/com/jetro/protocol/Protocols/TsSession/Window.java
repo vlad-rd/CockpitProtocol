@@ -1,6 +1,5 @@
 package com.jetro.protocol.Protocols.TsSession;
 
-import org.json.JSONArray;
 import org.json.simple.JSONObject;
 
 public class Window {
@@ -47,8 +46,6 @@ public class Window {
 			objJson.put("HParent", HParent);
 			objJson.put("PID", PID);
 			objJson.put("Title", Title);
-			JSONArray list = new JSONArray(Icon);
-			objJson.put("Icon", list);
 			objJson.put("AppID", AppID);
 			return objJson.toJSONString();
 		}

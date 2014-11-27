@@ -32,8 +32,7 @@ public class LoginScreenImageMsg extends BaseMsg {
 		{
 			objJson.put("MsgId", MsgId);
 			objJson.put("ImageName", ImageName);
-			org.json.JSONArray list = new org.json.JSONArray(Image);
-			objJson.put("Image", list);
+			objJson.put("Image", Image);
 			//objJson.put("Icon",Base64.getEncoder().encodeToString(Icon));
 			return objJson.toJSONString();
 		}
