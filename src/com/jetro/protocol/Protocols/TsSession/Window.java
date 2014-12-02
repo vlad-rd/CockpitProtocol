@@ -16,6 +16,12 @@ public class Window {
     
     public String AppID = "";
     
+    public float ZoomFactor = 1.0f;
+    
+    public int ScrollX = 0;
+    
+    public int ScrollY = 0;
+    
     @Override
 	public int hashCode() {
 		return this.HWND;
@@ -47,6 +53,9 @@ public class Window {
 			objJson.put("PID", PID);
 			objJson.put("Title", Title);
 			objJson.put("AppID", AppID);
+			objJson.put("ZoomFactor", ZoomFactor);
+			objJson.put("ScrollX", ScrollX);
+			objJson.put("ScrollY", ScrollY);
 			return objJson.toJSONString();
 		}
 		catch(Exception e)
