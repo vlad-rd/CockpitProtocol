@@ -13,6 +13,12 @@ public class WindowChangedMsg extends BaseMsg {
 	public int HWND = 0;
     
     public String Title = "";
+    
+    public float Zoom = 1.0F;
+    
+    public float ScrlX= 1.0F;
+    
+    public float ScrlY= 1.0F;
 
 	@Override
 	public void initialize() {
@@ -29,6 +35,9 @@ public class WindowChangedMsg extends BaseMsg {
 			objectJson.put("MsgID", MsgId);
 			objectJson.put("HWND", HWND);
 			objectJson.put("Title", Title);
+			objectJson.put("Zoom", Zoom);
+			objectJson.put("ScrlX", ScrlX);
+			objectJson.put("ScrlY", ScrlY);
 		}
 		catch(Exception e)
 		{
@@ -50,7 +59,10 @@ public class WindowChangedMsg extends BaseMsg {
 			HWND = Integer.valueOf(jsonObject.get("HWND").toString());
 			System.out.println(HWND);
 			Title = (String)jsonObject.get("Title");
-			System.out.println(Title);
+			Zoom = Float.valueOf(jsonObject.get("Zoom").toString());
+			ScrlX = Float.valueOf(jsonObject.get("ScrlX").toString());
+			ScrlY = Float.valueOf(jsonObject.get("ScrlY").toString());
+			System.out.println(Title + " " + ScrlX + " " + ScrlY);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
