@@ -7,6 +7,7 @@ import org.json.simple.parser.JSONParser;
 import com.jetro.protocol.Core.BaseMsg;
 import com.jetro.protocol.Core.ClassID;
 import com.jetro.protocol.Core.MESSAGE_CATEGORY;
+import com.jetro.protocol.Protocols.Controller.ConnectionPoint.ConnectionModeType;
 
 
 public class CockpitSiteInfoMsg extends BaseMsg {
@@ -99,8 +100,7 @@ public class CockpitSiteInfoMsg extends BaseMsg {
 				JSONObject jcp = (JSONObject) cPoints.get(i);
 				ConnectionPoints[i].IP = (String) jcp.get("IP");
 				ConnectionPoints[i].Port = Integer.valueOf(jcp.get("Port").toString());
-				ConnectionPoints[i].SSL = Boolean.valueOf(jcp.get("SSL").toString());
-				ConnectionPoints[i].WAN = Boolean.valueOf(jcp.get("WAN").toString());
+				ConnectionPoints[i].ConnectionMode = ConnectionModeType.valueOf(jcp.get("ConnectionMode").toString());
 				System.out.println(ConnectionPoints[i]);
 			}
 		} catch (Exception e) {

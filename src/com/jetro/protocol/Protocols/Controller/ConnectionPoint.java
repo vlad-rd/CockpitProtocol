@@ -12,10 +12,14 @@ public class ConnectionPoint implements Serializable, Parcelable {
 	
 	private static final long serialVersionUID = 7368317124217687402L;
 	
+	public enum ConnectionModeType {
+    	DIRECT,
+    	SSL
+    }
+	
 	public String IP = "";
     public int Port = 0;
-    public boolean WAN;
-    public boolean SSL = false;
+    public ConnectionModeType ConnectionMode = ConnectionModeType.SSL;
     
     public ConnectionPoint() {
     }
@@ -23,38 +27,6 @@ public class ConnectionPoint implements Serializable, Parcelable {
     public ConnectionPoint(Parcel in) {
     	readFromParcel(in);
     }
-    
-    public String getIP() {
-		return IP;
-	}
-
-	public void setIP(String iP) {
-		IP = iP;
-	}
-
-	public int getPort() {
-		return Port;
-	}
-
-	public void setPort(int port) {
-		Port = port;
-	}
-
-	public boolean isWAN() {
-		return WAN;
-	}
-
-	public void setWAN(boolean wAN) {
-		WAN = wAN;
-	}
-
-	public boolean isSSL() {
-		return SSL;
-	}
-
-	public void setSSL(boolean sSL) {
-		SSL = sSL;
-	}
 
 	@Override
     public String toString()
@@ -64,8 +36,7 @@ public class ConnectionPoint implements Serializable, Parcelable {
 		{
 			objJson.put("IP", IP);
 			objJson.put("Port", Port);
-			objJson.put("WAN", WAN);
-			objJson.put("SSL", SSL);
+			objJson.put("ConnectionMode", ConnectionMode);
 			return objJson.toJSONString();
 		}
 		catch(Exception e)
@@ -83,15 +54,13 @@ public class ConnectionPoint implements Serializable, Parcelable {
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeString(IP);
 		dest.writeInt(Port);
-		dest.writeByte((byte) ((WAN) ? 1 : 0));
-		dest.writeByte((byte) ((SSL) ? 1 : 0));
+		dest.writeSerializable(ConnectionMode);
 	}
 	
 	public void readFromParcel(Parcel source) {
 		IP = source.readString();
 		Port = source.readInt();
-		WAN = source.readByte() != 0;
-		SSL = source.readByte() != 0;
+		ConnectionMode = (ConnectionModeType) source.readSerializable();
 	}
 	
 	public static final Creator<ConnectionPoint> CREATOR = new Creator<ConnectionPoint>() {
