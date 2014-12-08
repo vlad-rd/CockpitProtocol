@@ -24,6 +24,7 @@ import javax.net.ssl.X509TrustManager;
 import android.util.Log;
 
 import com.jetro.protocol.Core.BaseMsg;
+import com.jetro.protocol.Core.IConnectionCreationSubscriber;
 import com.jetro.protocol.Core.Notificator;
 import com.jetro.protocol.Protocols.Generic.ErrorMsg;
 
@@ -163,6 +164,7 @@ public class ClientChannel extends Notificator {
 					streamProc(readen);
 			} catch (IOException e) {
 				Log.e(TAG, "ERROR: ", e);
+				fireConnectionBroken();
 				try {
 					if (_SSLSocket != null)
 						_SSLSocket.close();
@@ -249,51 +251,55 @@ public class ClientChannel extends Notificator {
 	private String _Address = "";
 	private int _Port = 0;
 
-	public static boolean Create(String address, int port, int timeout) {
+	public static boolean Create(String address, int port, int timeout, IConnectionCreationSubscriber cs) {
 		if (_Instance != null) {
 			_Instance.Stop();
 		}
 		_Instance = new ClientChannel();
 
-		return _Instance.create(address, port, timeout);
+		return _Instance.create(address, port, timeout, cs);
 	}
 
-	public static boolean CreateSSL(String address, int port, int timeout) {
+	public static boolean CreateSSL(String address, int port, int timeout, IConnectionCreationSubscriber cs) {
 		if (_Instance != null) {
 			_Instance.Stop();
 		}
 		_Instance = new ClientChannel();
 
-		return _Instance.createSSL(address, port, timeout);
+		return _Instance.createSSL(address, port, timeout, cs);
 	}
 
-	private boolean create(String address, int port, int timeout) {
+	private boolean create(String address, int port, int timeout, IConnectionCreationSubscriber cs) {
 		_Address = address;
 		_Port = port;
+		final IConnectionCreationSubscriber _CS = cs;
 
-		try {
+		/*try {
 			_Socket = SocketChannel.open();
 		} catch (IOException e) {
 			Log.e(TAG, "ERROR: ", e);
 			_Socket = null;
 			return false;
 		}
+		*/
 
 		Thread thread = new Thread() {
 			public void run() {
 				Log.i("Connector", "Starts");
 				try {
+					_Socket = SocketChannel.open();
 					_Socket.connect(new InetSocketAddress(_Address, _Port));
 					synchronized (_Socket) {
 						_Socket.notify();
 					}
+					if(_CS != null) _CS.ConnectionCreated(true, "");
 				} catch (IOException e) {
 					Log.e(TAG, "ERROR: ", e);
 					synchronized (_Socket) {
 						_Socket.notify();
 					}
+					if(_CS != null) _CS.ConnectionCreated(false, e.getMessage());
 				}
-
 			}
 		};
 		thread.start();
@@ -337,11 +343,11 @@ public class ClientChannel extends Notificator {
 		}
 	}
 
-	private boolean createSSL(String address, int port, int timeout) {
+	private boolean createSSL(String address, int port, int timeout, IConnectionCreationSubscriber cssl) {
 		_Address = address;
 		_Port = port;
 		_SSL = true;
-
+		final IConnectionCreationSubscriber _CSSL  = cssl;
 		final Object sync = new Object();
 
 		Thread thread = new Thread() {
@@ -357,11 +363,13 @@ public class ClientChannel extends Notificator {
 					synchronized (sync) {
 						sync.notify();
 					}
+					if(_CSSL != null) _CSSL.ConnectionCreated(true, "");
 				} catch (IOException e) {
 					Log.e(TAG, "ERROR: ", e);
 					synchronized (sync) {
 						sync.notify();
 					}
+					if(_CSSL != null) _CSSL.ConnectionCreated(false, e.getMessage());
 				}
 
 			}
