@@ -100,7 +100,8 @@ public class CockpitSiteInfoMsg extends BaseMsg {
 				JSONObject jcp = (JSONObject) cPoints.get(i);
 				ConnectionPoints[i].IP = (String) jcp.get("IP");
 				ConnectionPoints[i].Port = Integer.valueOf(jcp.get("Port").toString());
-				ConnectionPoints[i].ConnectionMode = ConnectionModeType.valueOf(jcp.get("ConnectionMode").toString());
+				int connectionModeTypeIndex = Integer.valueOf(jcp.get("ConnectionMode").toString());
+				ConnectionPoints[i].ConnectionMode = ConnectionModeType.values()[connectionModeTypeIndex];
 				System.out.println(ConnectionPoints[i]);
 			}
 		} catch (Exception e) {
