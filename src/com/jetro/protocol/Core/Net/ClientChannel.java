@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.SocketChannel;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -162,7 +163,20 @@ public class ClientChannel extends Notificator {
 				readen = _SSLSocket.getInputStream().read(_Chunk.array());
 				if (readen > 0)
 					streamProc(readen);
-			} catch (IOException e) {
+			} 
+			catch(SocketException se)
+			{
+				Log.e(TAG, "Socket close");
+				fireConnectionBroken();
+				try {
+					if (_SSLSocket != null)
+						_SSLSocket.close();
+				} catch (Exception ex) {
+					//Log.e(TAG, "ERROR: ", ex);
+				}
+				break;
+			}
+			catch (IOException e) {
 				Log.e(TAG, "ERROR: ", e);
 				fireConnectionBroken();
 				try {
@@ -232,7 +246,14 @@ public class ClientChannel extends Notificator {
 				readen = _Socket.read(_Chunk);
 				if (readen > 0)
 					streamProc(readen);
-			} catch (IOException e) {
+			} 
+			catch(AsynchronousCloseException ce)
+			{
+				Log.e(TAG, "Channel close");
+				fireConnectionBroken();
+				break;
+			}
+			catch (IOException e) {
 				Log.e(TAG, "ERROR: ", e);
 				fireConnectionBroken();
 				try {
@@ -268,37 +289,48 @@ public class ClientChannel extends Notificator {
 
 		return _Instance.createSSL(address, port, timeout, cs);
 	}
+	
+	private void connectionNotify(final IConnectionCreationSubscriber cs,final boolean result,final String text){
+		Thread thread = new Thread() {
+			public void run() {
+				try {
+					if(cs != null) cs.ConnectionCreated(result, text);
+				} catch (Exception e) {
+					Log.e(TAG, "ERROR: ", e);					
+				}
+			}
+		};
+		thread.start();
+	}
 
-	private boolean create(String address, int port, int timeout, IConnectionCreationSubscriber cs) {
+	private boolean create(String address, int port, int timeout, final IConnectionCreationSubscriber cs) {
 		_Address = address;
 		_Port = port;
-		final IConnectionCreationSubscriber _CS = cs;
 
-		/*try {
+		try {
 			_Socket = SocketChannel.open();
 		} catch (IOException e) {
 			Log.e(TAG, "ERROR: ", e);
 			_Socket = null;
+			connectionNotify(cs, false, e.getMessage());
 			return false;
 		}
-		*/
-
+		
 		Thread thread = new Thread() {
 			public void run() {
 				Log.i("Connector", "Starts");
 				try {
-					_Socket = SocketChannel.open();
 					_Socket.connect(new InetSocketAddress(_Address, _Port));
 					synchronized (_Socket) {
 						_Socket.notify();
 					}
-					if(_CS != null) _CS.ConnectionCreated(true, "");
+					connectionNotify(cs, true, "");
 				} catch (IOException e) {
 					Log.e(TAG, "ERROR: ", e);
 					synchronized (_Socket) {
 						_Socket.notify();
 					}
-					if(_CS != null) _CS.ConnectionCreated(false, e.getMessage());
+					connectionNotify(cs, false, e.getMessage());
 				}
 			}
 		};
@@ -343,11 +375,10 @@ public class ClientChannel extends Notificator {
 		}
 	}
 
-	private boolean createSSL(String address, int port, int timeout, IConnectionCreationSubscriber cssl) {
+	private boolean createSSL(String address, int port, int timeout, final IConnectionCreationSubscriber cssl) {
 		_Address = address;
 		_Port = port;
 		_SSL = true;
-		final IConnectionCreationSubscriber _CSSL  = cssl;
 		final Object sync = new Object();
 
 		Thread thread = new Thread() {
@@ -363,13 +394,13 @@ public class ClientChannel extends Notificator {
 					synchronized (sync) {
 						sync.notify();
 					}
-					if(_CSSL != null) _CSSL.ConnectionCreated(true, "");
+					connectionNotify(cssl, true, "");
 				} catch (IOException e) {
 					Log.e(TAG, "ERROR: ", e);
 					synchronized (sync) {
 						sync.notify();
 					}
-					if(_CSSL != null) _CSSL.ConnectionCreated(false, e.getMessage());
+					connectionNotify(cssl,false, e.getMessage());
 				}
 
 			}
@@ -420,22 +451,28 @@ public class ClientChannel extends Notificator {
 	}
 
 	public void Stop() {
-		try {
-			if (_Socket != null) {
-				_Socket.close();
-				_Socket = null;
+		_Instance = null;
+		Thread thread = new Thread() {
+			public void run() {
+				try {
+					if (_Socket != null) {
+						_Socket.close();
+						_Socket = null;
+					}
+					if (_SSLSocket != null) {
+						_SSLSocket.close();
+						_SSLSocket = null;
+					}
+					if (_ByteArrayOutputStream != null) {
+						_ByteArrayOutputStream.close();
+					}
+					
+				} catch (IOException e) {
+					Log.e(TAG, "ERROR: ", e);
+				}
 			}
-			if (_SSLSocket != null) {
-				_SSLSocket.close();
-				_SSLSocket = null;
-			}
-			if (_ByteArrayOutputStream != null) {
-				_ByteArrayOutputStream.close();
-			}
-			_Instance = null;
-		} catch (IOException e) {
-			Log.e(TAG, "ERROR: ", e);
-		}
+		};
+		thread.start();
 	}
 
 	public boolean Send(BaseMsg msg) {
@@ -465,7 +502,7 @@ public class ClientChannel extends Notificator {
 			Log.e(TAG, "ERROR: ", e);
 		}
 	}
-
+	
 	private class msgAsyncSender {
 		BaseMsg msg;
 
