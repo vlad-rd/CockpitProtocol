@@ -340,8 +340,10 @@ public class ClientChannel extends Notificator {
 				Log.i("Connector", "Starts");
 				try {
 					if(syncStop != null) 
-						//synchronized (syncStop) 
+					{
+						synchronized (syncStop) 
 						{ syncStop.wait(); }
+					}
 					_Socket.connect(new InetSocketAddress(_Address, _Port));
 					synchronized (_Socket) {
 						_Socket.notify();
@@ -421,7 +423,8 @@ public class ClientChannel extends Notificator {
 			public void run() {
 				Log.i(TAG, "createSSL Starts");
 				try {
-					if(syncStop != null) //Thread.sleep(1000);
+					if(syncStop != null)
+					{//Thread.sleep(1000);
 						Log.i(TAG,"createSSL before sync");
 						synchronized (syncStop) 
 						{ 
@@ -429,6 +432,7 @@ public class ClientChannel extends Notificator {
 							syncStop.wait(); 
 							Log.i(TAG,"createSSL after wait");
 						}
+					}
 					
 					SSLSocketFactory factory = getSocketFactory();
 					_SSLSocket = (SSLSocket) factory.createSocket(_Address,
@@ -533,6 +537,7 @@ public class ClientChannel extends Notificator {
 					try
 					{
 						if(syncStop != null) 
+						{
 							Log.i(TAG, "Stop synchronized");
 							synchronized (syncStop) 
 							{ 
@@ -540,6 +545,7 @@ public class ClientChannel extends Notificator {
 								syncStop.notify(); 
 								Log.i(TAG, "Stop after notify");
 							}
+						}
 					}
 					catch (Exception e) {
 						Log.e(TAG, "ERROR: ", e);
