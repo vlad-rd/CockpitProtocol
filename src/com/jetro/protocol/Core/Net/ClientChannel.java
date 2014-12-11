@@ -69,7 +69,7 @@ public class ClientChannel extends Notificator {
 				}
 			} catch (IOException e) {
 				Log.e(TAG, "ERROR: ", e);
-				Stop();
+				Stop(null);
 				return new ErrorMsg(msg.MsgId, 999, "Unexpected error");
 			}
 
@@ -152,6 +152,14 @@ public class ClientChannel extends Notificator {
 	public void threadProcSSL() {
 		Thread.currentThread().setName("ClientChannel-ListenerSSL");
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+		/*
+		try {
+			Thread.sleep(1200);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}*/
+		Log.e(TAG, "threadProcSSL started");
 		int readen = 0;
 		while (true) {
 			try {
@@ -166,7 +174,7 @@ public class ClientChannel extends Notificator {
 			} 
 			catch(SocketException se)
 			{
-				Log.e(TAG, "Socket close");
+				Log.e(TAG, "Socket close after exception");
 				fireConnectionBroken();
 				try {
 					if (_SSLSocket != null)
@@ -185,6 +193,11 @@ public class ClientChannel extends Notificator {
 				} catch (Exception ex) {
 					Log.e(TAG, "ERROR: ", ex);
 				}
+				_SSLSocket = null;
+				break;
+			}
+			catch (Exception e) {
+				Log.e(TAG, "ERROR: ", e);
 				_SSLSocket = null;
 				break;
 			}
@@ -272,22 +285,28 @@ public class ClientChannel extends Notificator {
 	private String _Address = "";
 	private int _Port = 0;
 
-	public static boolean Create(String address, int port, int timeout, IConnectionCreationSubscriber cs) {
+	public static boolean Create(String address, int port, int timeout, IConnectionCreationSubscriber cs) throws InterruptedException {
+		Object syncStop = null;
 		if (_Instance != null) {
-			_Instance.Stop();
+			syncStop = new Object();
+			_Instance.Stop(syncStop);
 		}
+		
 		_Instance = new ClientChannel();
 
-		return _Instance.create(address, port, timeout, cs);
+		return _Instance.create(address, port, timeout, cs, syncStop);
 	}
 
-	public static boolean CreateSSL(String address, int port, int timeout, IConnectionCreationSubscriber cs) {
+	public static boolean CreateSSL(String address, int port, int timeout, IConnectionCreationSubscriber cs) throws InterruptedException {
+		Object syncStop = null;
 		if (_Instance != null) {
-			_Instance.Stop();
+			syncStop = new Object();
+			_Instance.Stop(syncStop);
 		}
+		
 		_Instance = new ClientChannel();
 
-		return _Instance.createSSL(address, port, timeout, cs);
+		return _Instance.createSSL(address, port, timeout, cs, syncStop);
 	}
 	
 	private void connectionNotify(final IConnectionCreationSubscriber cs,final boolean result,final String text){
@@ -303,7 +322,7 @@ public class ClientChannel extends Notificator {
 		thread.start();
 	}
 
-	private boolean create(String address, int port, int timeout, final IConnectionCreationSubscriber cs) {
+	private boolean create(String address, int port, int timeout, final IConnectionCreationSubscriber cs, final Object syncStop) {
 		_Address = address;
 		_Port = port;
 
@@ -320,12 +339,29 @@ public class ClientChannel extends Notificator {
 			public void run() {
 				Log.i("Connector", "Starts");
 				try {
+					if(syncStop != null) 
+						//synchronized (syncStop) 
+						{ syncStop.wait(); }
 					_Socket.connect(new InetSocketAddress(_Address, _Port));
 					synchronized (_Socket) {
 						_Socket.notify();
 					}
+					_Instance = ClientChannel.this;
 					connectionNotify(cs, true, "");
 				} catch (IOException e) {
+					Log.e(TAG, "ERROR: ", e);
+					synchronized (_Socket) {
+						_Socket.notify();
+					}
+					connectionNotify(cs, false, e.getMessage());
+				} catch (InterruptedException e) {
+					Log.e(TAG, "ERROR: ", e);
+					synchronized (_Socket) {
+						_Socket.notify();
+					}
+					connectionNotify(cs, false, e.getMessage());
+				}
+				catch (Exception e) {
 					Log.e(TAG, "ERROR: ", e);
 					synchronized (_Socket) {
 						_Socket.notify();
@@ -375,7 +411,7 @@ public class ClientChannel extends Notificator {
 		}
 	}
 
-	private boolean createSSL(String address, int port, int timeout, final IConnectionCreationSubscriber cssl) {
+	private boolean createSSL(String address, int port, int timeout, final IConnectionCreationSubscriber cssl, final Object syncStop) {
 		_Address = address;
 		_Port = port;
 		_SSL = true;
@@ -383,19 +419,41 @@ public class ClientChannel extends Notificator {
 
 		Thread thread = new Thread() {
 			public void run() {
-				Log.i("Connector SSL", "Starts");
+				Log.i(TAG, "createSSL Starts");
 				try {
-
+					if(syncStop != null) //Thread.sleep(1000);
+						Log.i(TAG,"createSSL before sync");
+						synchronized (syncStop) 
+						{ 
+							Log.i(TAG,"createSSL before wait");
+							syncStop.wait(); 
+							Log.i(TAG,"createSSL after wait");
+						}
+					
 					SSLSocketFactory factory = getSocketFactory();
 					_SSLSocket = (SSLSocket) factory.createSocket(_Address,
 							_Port);
 					_SSLSocket.startHandshake();
-
+					Log.i(TAG, "SSL socket created");
 					synchronized (sync) {
 						sync.notify();
 					}
+					_Instance = ClientChannel.this;
 					connectionNotify(cssl, true, "");
 				} catch (IOException e) {
+					Log.e(TAG, "ERROR: ", e);
+					synchronized (sync) {
+						sync.notify();
+					}
+					connectionNotify(cssl,false, e.getMessage());
+				} catch (InterruptedException e) {
+					Log.e(TAG, "ERROR: ", e);
+					synchronized (sync) {
+						sync.notify();
+					}
+					connectionNotify(cssl,false, e.getMessage());
+				}
+				catch (Exception e) {
 					Log.e(TAG, "ERROR: ", e);
 					synchronized (sync) {
 						sync.notify();
@@ -406,8 +464,6 @@ public class ClientChannel extends Notificator {
 			}
 		};
 		thread.start();
-
-		Log.i("Connector", "End");
 
 		try {
 			synchronized (sync) {
@@ -450,11 +506,11 @@ public class ClientChannel extends Notificator {
 		return sslSocketFactory;
 	}
 
-	public void Stop() {
-		_Instance = null;
+	public void Stop(final Object syncStop) {
 		Thread thread = new Thread() {
 			public void run() {
 				try {
+					Log.i(TAG, "Stop Starts");
 					if (_Socket != null) {
 						_Socket.close();
 						_Socket = null;
@@ -467,8 +523,28 @@ public class ClientChannel extends Notificator {
 						_ByteArrayOutputStream.close();
 					}
 					
-				} catch (IOException e) {
+				} catch (Exception e) {
 					Log.e(TAG, "ERROR: ", e);
+				}		
+				finally
+				{
+					_Instance = null;
+				
+					try
+					{
+						if(syncStop != null) 
+							Log.i(TAG, "Stop synchronized");
+							synchronized (syncStop) 
+							{ 
+								Log.i(TAG, "Stop before notify");
+								syncStop.notify(); 
+								Log.i(TAG, "Stop after notify");
+							}
+					}
+					catch (Exception e) {
+						Log.e(TAG, "ERROR: ", e);
+					}
+					Log.i(TAG, "Stop exit");
 				}
 			}
 		};
@@ -522,6 +598,16 @@ public class ClientChannel extends Notificator {
 							_SSLSocket.getOutputStream().flush();
 						}
 					} catch (IOException e) {
+						Log.e(TAG, "ERROR: ", e);
+						try {
+							_Socket.close();
+						} catch (IOException e1) {
+							Log.e(TAG, "ERROR: ", e1);
+						} finally {
+							_Socket = null;
+						}
+					}
+					catch (Exception e) {
 						Log.e(TAG, "ERROR: ", e);
 						try {
 							_Socket.close();
