@@ -278,12 +278,35 @@ public class ClientChannel extends Notificator {
 				_Socket = null;
 				break;
 			}
+			catch (Exception e) {
+				Log.e(TAG, "ERROR: ", e);
+				fireConnectionBroken();
+				try {
+					if (_Socket != null)
+						_Socket.close();
+				} catch (Exception e2) {
+					Log.e(TAG, "ERROR: ", e2);
+				}
+				_Socket = null;
+				break;
+			}
 		}
 		Log.i("ClientChannel", "threadProc exit");
 	}
 
 	private String _Address = "";
+	
+	public String getAddress()
+	{
+		return _Address;
+	}
+	
 	private int _Port = 0;
+	public int getPort()
+	{
+		return _Port;
+	}
+	
 
 	public static boolean Create(String address, int port, int timeout, IConnectionCreationSubscriber cs) throws InterruptedException {
 		Object syncStop = null;
@@ -352,21 +375,30 @@ public class ClientChannel extends Notificator {
 					connectionNotify(cs, true, "");
 				} catch (IOException e) {
 					Log.e(TAG, "ERROR: ", e);
-					synchronized (_Socket) {
-						_Socket.notify();
+					if(_Socket != null)
+					{
+						synchronized (_Socket) {
+							_Socket.notify();
+						}
 					}
 					connectionNotify(cs, false, e.getMessage());
 				} catch (InterruptedException e) {
 					Log.e(TAG, "ERROR: ", e);
-					synchronized (_Socket) {
-						_Socket.notify();
+					if(_Socket != null)
+					{
+						synchronized (_Socket) {
+							_Socket.notify();
+						}
 					}
 					connectionNotify(cs, false, e.getMessage());
 				}
 				catch (Exception e) {
 					Log.e(TAG, "ERROR: ", e);
-					synchronized (_Socket) {
-						_Socket.notify();
+					if(_Socket != null)
+					{
+						synchronized (_Socket) {
+							_Socket.notify();
+						}
 					}
 					connectionNotify(cs, false, e.getMessage());
 				}
@@ -585,6 +617,11 @@ public class ClientChannel extends Notificator {
 		}
 	}
 	
+	public Boolean isSsl()
+	{
+		return _SSL;
+	}
+	
 	private class msgAsyncSender {
 		BaseMsg msg;
 
@@ -606,7 +643,7 @@ public class ClientChannel extends Notificator {
 					} catch (IOException e) {
 						Log.e(TAG, "ERROR: ", e);
 						try {
-							_Socket.close();
+							if(_Socket != null)_Socket.close();
 						} catch (IOException e1) {
 							Log.e(TAG, "ERROR: ", e1);
 						} finally {
@@ -616,7 +653,7 @@ public class ClientChannel extends Notificator {
 					catch (Exception e) {
 						Log.e(TAG, "ERROR: ", e);
 						try {
-							_Socket.close();
+							if(_Socket != null) _Socket.close();
 						} catch (IOException e1) {
 							Log.e(TAG, "ERROR: ", e1);
 						} finally {

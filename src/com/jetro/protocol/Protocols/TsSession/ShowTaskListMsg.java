@@ -115,7 +115,7 @@ public class ShowTaskListMsg extends BaseMsg {
 				e.printStackTrace();
 			}
 			titles.add(title);
-            size += 12 + 4 + appID.length + 4 + title.length + 4 + Tasks[i].Icon.length;
+            size += 12 + 4 + appID.length + 4 + title.length + 4 + Tasks[i].Icon.length + 12;
         }
 		
         Data = new byte[size];
@@ -132,6 +132,9 @@ public class ShowTaskListMsg extends BaseMsg {
         	rwo.WriteBinary(apps.get(i), Data);
         	rwo.WriteBinary(titles.get(i), Data);
         	rwo.WriteBinary(Tasks[i].Icon, Data);
+        	rwo.WriteFloat(Tasks[i].ZoomFactor, Data);
+        	rwo.WriteInt(Tasks[i].ScrollX, Data);
+        	rwo.WriteInt(Tasks[i].ScrollY, Data);
         }
  	}
 	
@@ -166,6 +169,11 @@ public class ShowTaskListMsg extends BaseMsg {
 				e.printStackTrace();
 			}
 			Tasks[i].Icon = rwo.ReadBinary(buffer);
+			Tasks[i].ZoomFactor = rwo.ReadFloat(buffer);
+			Tasks[i].ScrollX = rwo.ReadInt(buffer);
+			Tasks[i].ScrollY = rwo.ReadInt(buffer);
+			// TODO: delete after fix
+//			Tasks[i].ZoomFactor = 1.0F;
 		}
 	}
 

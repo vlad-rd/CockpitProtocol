@@ -25,6 +25,7 @@ import com.jetro.protocol.Protocols.TsSession.ShowKeyBoardMsg;
 import com.jetro.protocol.Protocols.TsSession.ShowTaskListMsg;
 import com.jetro.protocol.Protocols.TsSession.ShowWindowMsg;
 import com.jetro.protocol.Protocols.TsSession.StartApplicationMsg;
+import com.jetro.protocol.Protocols.TsSession.StartRdpMsg;
 import com.jetro.protocol.Protocols.TsSession.WindowChangedMsg;
 import com.jetro.protocol.Protocols.TsSession.WindowCloseMsg;
 import com.jetro.protocol.Protocols.TsSession.WindowCreatedMsg;
@@ -403,6 +404,9 @@ public abstract class BaseMsg {
 			case WindowDestroyedMsg:
 				WindowDestroyedMsg wd = new WindowDestroyedMsg();
 				return wd.unpack(buffer);
+			case StartRdpMsg:
+				StartRdpMsg srdp = new StartRdpMsg();
+				return srdp.unpack(buffer);
 				
 				default:
 					break;

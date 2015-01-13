@@ -16,9 +16,9 @@ public class WindowChangedMsg extends BaseMsg {
     
     public float Zoom = 1.0F;
     
-    public float ScrlX= 1.0F;
+    public int ScrlX = 0;
     
-    public float ScrlY= 1.0F;
+    public int ScrlY = 0;
 
 	@Override
 	public void initialize() {
@@ -60,8 +60,8 @@ public class WindowChangedMsg extends BaseMsg {
 			System.out.println(HWND);
 			Title = (String)jsonObject.get("Title");
 			Zoom = Float.valueOf(jsonObject.get("Zoom").toString());
-			ScrlX = Float.valueOf(jsonObject.get("ScrlX").toString());
-			ScrlY = Float.valueOf(jsonObject.get("ScrlY").toString());
+			ScrlX = Integer.valueOf(jsonObject.get("ScrlX").toString());
+			ScrlY = Integer.valueOf(jsonObject.get("ScrlY").toString());
 			System.out.println(Title + " " + ScrlX + " " + ScrlY);
 		} catch (Exception e) {
 			e.printStackTrace();

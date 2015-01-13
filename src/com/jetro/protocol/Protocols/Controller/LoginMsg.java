@@ -24,6 +24,7 @@ public class LoginMsg extends BaseMsg {
 	public String Ticket = "";
 	public int returnCode = LOGIN_FAILURE;
 	public int daysBeforePasswordExpiration = -1;
+	public String email = "";
 	
 	@Override
 	public void initialize() {
@@ -45,6 +46,7 @@ public class LoginMsg extends BaseMsg {
 			objectJson.put("ReturnCode", new Integer(returnCode));
 			objectJson.put("DaysBeforePasswordExpiration", new Integer(daysBeforePasswordExpiration));
 			objectJson.put("Ticket", Ticket);
+			objectJson.put("Email", email);
 		}
 		catch(Exception e)
 		{
@@ -79,6 +81,8 @@ public class LoginMsg extends BaseMsg {
 			System.out.println(deviceId);
 			daysBeforePasswordExpiration = Integer.valueOf(jsonObject.get("DaysBeforePasswordExpiration").toString());
 			System.out.println(daysBeforePasswordExpiration);
+			email = (String) jsonObject.get("Email");
+			System.out.println(email);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
